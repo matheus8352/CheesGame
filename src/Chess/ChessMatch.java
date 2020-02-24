@@ -1,6 +1,8 @@
 package Chess;
 
 import BoardGame.Board;
+import BoardGame.Position;
+import Chess.Pieces.Rook;
 
 public class ChessMatch {
 
@@ -8,6 +10,7 @@ public class ChessMatch {
 	
 	public ChessMatch() {
 		board = new Board(8,8);
+		initialSetup();
 	}
 	
 	public ChessPiece[][] getPieces(){
@@ -16,5 +19,9 @@ public class ChessMatch {
 			for (int j = 0; j < board.getColumns(); j++) 
 				aux[i][j] = (ChessPiece) board.getPiece(i, j);
 		return aux;
+	}
+	
+	private void initialSetup() {
+		board.placePiece(new Rook(board, Color.WHITE), new Position(2,1));
 	}
 }
