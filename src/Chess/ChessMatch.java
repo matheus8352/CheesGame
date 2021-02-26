@@ -1,5 +1,6 @@
  package Chess;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class ChessMatch {
 	private boolean check;
 	private boolean checkMate;
 	private ChessPiece enPassantVulnerable;
+	private ChessPiece promoted;
 	
 	private List<Piece> piecesOnTheBoard = new ArrayList<>();
 	private List<Piece> capturedPieces = new ArrayList<>();
@@ -44,6 +46,10 @@ public class ChessMatch {
 	
 	public ChessPiece getEnPassabtVulnerable() {
 		return enPassantVulnerable;
+	}
+	
+	public ChessPiece getPromoted() {
+		return promoted;
 	}
 	
 	public ChessMatch() {
@@ -83,6 +89,15 @@ public class ChessMatch {
 		
 		ChessPiece movedPiece = (ChessPiece)board.getPiece(target);
 		
+		//promotion
+		promoted = null;
+		if(movedPiece instanceof Pawn) {
+			if((movedPiece.getColor() == Color.WHITE && target.getRow() == 0) || (movedPiece.getColor() == Color.BLACK && target.getRow() == 7)) {
+				promoted = (ChessPiece)board.getPiece(target);
+				promoted = replacePromotedPiece("Q");
+			}
+		}
+		
 		check = testCheck(getOpponent(currentPlayer)) ? true : false;
 		
 		if(testCheckMate(getOpponent(currentPlayer)))
@@ -97,6 +112,39 @@ public class ChessMatch {
 			enPassantVulnerable = null;
 		
 		return (ChessPiece)capturedPiece;
+	}
+	
+	public ChessPiece replacePromotedPiece(String type) {
+		if(promoted == null)
+			throw new IllegalStateException("There is no piece to be promoted");
+		
+		if(!type.contentEquals("B") && !type.contentEquals("N") && !type.contentEquals("R") && !type.contentEquals("Q"))
+			throw new InvalidParameterException("Invalid type for promotion");
+		
+		Position position = promoted.getChessPosition().toPosition();
+		Piece piece = board.removePiece(position);
+		piecesOnTheBoard.remove(piece);
+		
+		ChessPiece newPiece = newPiece(type, promoted.getColor());
+		board.placePiece(newPiece, position);
+		piecesOnTheBoard.add(newPiece);
+		
+		return newPiece;
+	}
+	
+	private ChessPiece newPiece(String type, Color color) {
+		switch(type) {
+			case "B":
+				return new Bishop(board, color);
+			
+			case "N":
+				return new Knight(board, color);
+				
+			case "R":
+				return new Rook(board, color);
+		}
+		
+		return new Queen(board, color);
 	}
 	
 	private Piece makeMove(Position source, Position target) {
